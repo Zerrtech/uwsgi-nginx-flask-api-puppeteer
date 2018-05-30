@@ -2,8 +2,23 @@ FROM tiangolo/uwsgi-nginx-flask:python3.6
 
 # These couple XML packages are for OneLogin SSO SAML in python
 RUN apt-get update && apt-get install -y --no-install-recommends libxml2-dev libxmlsec1-dev \
-   && curl -sL https://deb.nodesource.com/setup_8.x | /bin/bash - \
-   && apt-get install -y nodejs
+
+# packages for nodejs setup
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get install -y \
+    curl apt-transport-https apt-utils dialog
+
+ARG NODEREPO="node_8.x"
+ARG DISTRO="stretch"
+# Only newest package kept in nodesource repo. Cannot pin to version using apt!
+# See https://github.com/nodesource/distributions/issues/33
+RUN curl -sSO https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+RUN apt-key add nodesource.gpg.key
+RUN echo "deb https://deb.nodesource.com/${NODEREPO} ${DISTRO} main" > /etc/apt/sources.list.d/nodesource.list
+RUN echo "deb-src https://deb.nodesource.com/${NODEREPO} ${DISTRO} main" >> /etc/apt/sources.list.d/nodesource.list
+RUN apt-get update -q && apt-get install -y 'nodejs=8.11.2*'
+
+RUN node --version
 
 # This group of installs is only for setting up reqs for puppeteer
 # this list from https://github.com/Googlechrome/puppeteer/issues/290#issuecomment-360542685
